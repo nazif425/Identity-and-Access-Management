@@ -84,7 +84,7 @@ def create_drink(jwt_payload, *args, **kwargs):
     
 
     # validate drink title. Abort if title already exists
-    if Drink.query.filter(Drink.title==data['title']).count() > 0:
+    if Drink.query.filter(Drink.title==request.get_json()['title']).count() > 0:
         abort(400)
     
     # insert new drink to database
@@ -116,19 +116,17 @@ def create_drink(jwt_payload, *args, **kwargs):
 @app.route("/drinks/<int:id>", methods=['PATCH'])
 @requires_auth('patch:drinks')
 def update_drink_detail(jwt_payload, id, *args, **kwargs):
-    
-    # validate patch data
-    if 'title' not in request.get_json() \
-        and 'recipe' not in request.get_json():
-        abort(400)
-    
+        
     drink = Drink.query.filter(Drink.id == id).one_or_none()
     if not drink:
         abort(404)
     
     # update drink record in the database
-    drink.title = request.get_json()['title']
-    drink.recipe = json.dumps(request.get_json()['recipe'])
+    if 'title' in request.get_json():
+        drink.title = request.get_json()['title']
+    if 'recipe' in request.get_json():
+        drink.recipe = json.dumps(request.get_json()['recipe'])
+    
     try:
         drink.update()
     except:
